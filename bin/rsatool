@@ -40,7 +40,7 @@ if __name__ == '__main__':
             decrypt(attack)
 
     elif args.technique == 'fermat':
-        attack = Fermat(args.n)
+        attack = Fermat(args.n, args.e)
         if attack.crack():
             cracked = True
             decrypt(attack)

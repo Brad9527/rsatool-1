@@ -2,9 +2,9 @@ from libnum import *
 import gmpy
 
 class Fermat():
-    def __init__(self, n, limit=10000):
+    def __init__(self, n, e, limit=10000):
         self.n = n
-        self.e = ''
+        self.e = e
         self.d = None
         self.p = None
         self.q = None
@@ -21,11 +21,11 @@ class Fermat():
                     break
             a += 1
         if a < max:
-            self.p = a+b
-            self.q = a-b
+            self.p = long(a+b)
+            self.q = long(a-b)
             phi = (self.p - 1) * (self.q - 1)
             if has_invmod(self.e, phi):
-                self.d = invmod(self.e, phi)
+                self.d = long(invmod(self.e, phi))
                 return True
         else:
             return False
