@@ -1,3 +1,4 @@
+from libnum import *
 import gmpy
 
 class Fermat():
