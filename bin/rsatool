@@ -1,0 +1,73 @@
+import argparse, json
+from Crypto.PublicKey import RSA
+from rsatool import *
+
+def autoInt(n):
+    res = n.split(',')
+    if len(res)==1:
+        return int(res[0],0)
+    else:
+        return [int(x,0) for x in res]
+
+
+def decrypt(attack):
+    if args.c:
+        key = RSA.construct((args.n, long(args.e), attack.d, attack.p, attack.q))
+        print ('%x' % key.decrypt(args.c)).decode('hex')
+    else:
+        print json.dumps({
+            'd': long(attack.d),
+            'p': long(attack.p),
+            'q': long(attack.q)
+        })
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', dest='technique', required=True, choices=['wiener', 'fermat', 'factor', 'hastad', 'chosen'], help='Attack technique')
+    parser.add_argument('-e', dest='e', required=True, help='Public exponent', type=autoInt)
+    parser.add_argument('-n', dest='n', required=True, help='Modulus', type=autoInt)
+    parser.add_argument('-c', dest='c', help='Cipher text', type=autoInt)
+    parser.add_argument('-f', dest='f', help='A factor used in chosen cipher text', type=autoInt)
+    parser.add_argument('-plain', dest='plain', help='The plain text decrypted from the chosen cipher', type=autoInt)
+    args = parser.parse_args()
+
+    cracked = False
+
+    if args.technique == 'wiener':
+        attack = Wiener(args.n, args.e)
+        if attack.crack():
+            cracked = True
+            decrypt(attack)
+
+    elif args.technique == 'fermat':
+        attack = Fermat(args.n)
+        if attack.crack():
+            cracked = True
+            decrypt(attack)
+
+    elif args.technique == 'factor':
+        attack = Factorization(args.n, args.e)
+        if attack.crack():
+            cracked = True
+            decrypt(attack)
+
+    elif args.technique == 'hastad':
+        assert args.e == 3
+        attack = Hastad(args.n, args.e, args.c)
+        if attack.crack():
+            cracked = True
+            print attack.plain
+
+    elif args.technique == 'chosen':
+        assert args.c and args.f and args.plain
+        attack = ChosenCipher(args.n, args.e, args.c)
+        if attack.crack(args.f, args.plain):
+            cracked = True
+            print attack.plain
+
+
+
+    if cracked:
+        print '[+] Attack succeeded!'
+    else:
+        print '[-] Attack failed.'
