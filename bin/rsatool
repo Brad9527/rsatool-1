@@ -1,19 +1,30 @@
-import argparse, json
+import argparse, json, os
 from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 from rsatool import *
+
+'''*************************************************************************
+    Auxiliary
+*************************************************************************'''
 
 def autoInt(n):
     res = n.split(',')
     if len(res)==1:
-        return int(res[0],0)
+        return int(res[0], 0)
     else:
-        return [int(x,0) for x in res]
+        return [int(x, 0) for x in res]
 
 
 def decrypt(attack):
     if args.c:
         key = RSA.construct((args.n, long(args.e), attack.d, attack.p, attack.q))
-        print ('%x' % key.decrypt(args.c)).decode('hex')
+        if args.padding:
+            key = PKCS1_OAEP.new(key)
+
+        try:
+            print ('%x' % key.decrypt(args.c)).decode('hex')
+        except:
+            print key.decrypt(args.c)
     else:
         print json.dumps({
             'd': long(attack.d),
@@ -21,19 +32,64 @@ def decrypt(attack):
             'q': long(attack.q)
         })
 
+
+
 if __name__ == '__main__':
+    '''*************************************************************************
+        Arguments and settings
+    *************************************************************************'''
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', dest='technique', required=True, choices=['wiener', 'fermat', 'factor', 'hastad', 'chosen'], help='Attack technique')
-    parser.add_argument('-e', dest='e', required=True, help='Public exponent', type=autoInt)
-    parser.add_argument('-n', dest='n', required=True, help='Modulus', type=autoInt)
+    parser.add_argument('-t', dest='technique', choices=['wiener', 'fermat', 'factor', 'hastad', 'chosen'], help='Attack technique')
+    parser.add_argument('-d', dest='d', help='Private exponent', type=autoInt)
+    parser.add_argument('-e', dest='e', default=3, help='Public exponent', type=autoInt)
+    parser.add_argument('-n', dest='n', help='Modulus', type=autoInt)
     parser.add_argument('-c', dest='c', help='Cipher text', type=autoInt)
     parser.add_argument('-f', dest='f', help='A factor used in chosen cipher text', type=autoInt)
     parser.add_argument('-plain', dest='plain', help='The plain text decrypted from the chosen cipher', type=autoInt)
+    parser.add_argument('-pem', dest='pem', help='Read pubkey.pem file')
+    parser.add_argument('-raw', dest='raw', help='Read cipher.raw file')
+    parser.add_argument('-padding', dest='padding', help='Use padding', action='store_true')
     args = parser.parse_args()
 
+    if args.pem:
+        assert os.path.isfile(args.pem)
+        with open(args.pem) as f:
+            key = RSA.importKey(f.read())
+            args.e = key.e
+            args.n = key.n
+
+    if args.raw:
+        assert os.path.isfile(args.raw)
+        with open(args.raw) as f:
+            args.c = f.read()
+
+
+    '''*************************************************************************
+        Crack
+    *************************************************************************'''
     cracked = False
 
-    if args.technique == 'wiener':
+
+    if args.c and args.d and args.n:
+        cracked = True
+        print ('%x' % pow(args.c, args.d, args.n)).decode('hex')
+
+    elif not args.technique:
+        attack = Wiener(args.n, args.e)
+        if attack.crack():
+            cracked = True
+        else:
+            attack = Fermat(args.n, args.e)
+            if attack.crack():
+                cracked = True
+            else:
+                attack = Factorization(args.n, args.e)
+                if attack.crack():
+                    cracked = True
+        if cracked:
+            decrypt(attack)
+
+    elif args.technique == 'wiener':
         attack = Wiener(args.n, args.e)
         if attack.crack():
             cracked = True
@@ -52,7 +108,6 @@ if __name__ == '__main__':
             decrypt(attack)
 
     elif args.technique == 'hastad':
-        assert args.e == 3
         attack = Hastad(args.n, args.e, args.c)
         if attack.crack():
             cracked = True
@@ -66,8 +121,5 @@ if __name__ == '__main__':
             print attack.plain
 
 
-
-    if cracked:
-        print '[+] Attack succeeded!'
-    else:
+    if not cracked:
         print '[-] Attack failed.'
