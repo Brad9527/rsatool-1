@@ -22,7 +22,7 @@ class Fermat():
         if a < max:
             self.p = a+b
             self.q = a-b
-            phi = (p - 1) * (q - 1)
+            phi = (self.p - 1) * (self.q - 1)
             if has_invmod(self.e, phi):
                 self.d = invmod(self.e, phi)
                 return True
