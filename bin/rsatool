@@ -3,6 +3,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from rsatool import *
 
+
 '''*************************************************************************
     Auxiliary
 *************************************************************************'''
@@ -21,17 +22,19 @@ def decrypt(attack):
         if args.padding:
             key = PKCS1_OAEP.new(key)
 
+        m = pow(args.c, attack.d, args.n)
+        print('p = {}'.format(attack.p))
+        print('q = {}'.format(attack.q))
+        print('d = {}'.format(attack.d))
+        print('m = {}'.format(m))
         try:
-            print ('%x' % key.decrypt(args.c)).decode('hex')
+            print(str(hex(int(m)))[2:].replace('L', '').decode('hex'))
         except:
-            print key.decrypt(args.c)
+            pass
     else:
-        print json.dumps({
-            'd': long(attack.d),
-            'p': long(attack.p),
-            'q': long(attack.q)
-        })
-
+        print('p = {}'.format(attack.p))
+        print('q = {}'.format(attack.q))
+        print('d = {}'.format(attack.d))
 
 
 if __name__ == '__main__':
@@ -39,10 +42,19 @@ if __name__ == '__main__':
         Arguments and settings
     *************************************************************************'''
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', dest='technique', choices=['wiener', 'fermat', 'factor', 'hastad', 'chosen'], help='Attack technique')
+    parser.add_argument('-t', dest='technique', choices=[
+        'inverse',
+        'wiener',
+        'fermat',
+        'factor',
+        'hastad',
+        'chosen'
+    ], help='Attack technique')
     parser.add_argument('-d', dest='d', help='Private exponent', type=autoInt)
     parser.add_argument('-e', dest='e', default=3, help='Public exponent', type=autoInt)
-    parser.add_argument('-n', dest='n', help='Modulus', type=autoInt)
+    parser.add_argument('-p', dest='p', help='Prime number p', type=autoInt)
+    parser.add_argument('-q', dest='q', help='Prime number q', type=autoInt)
+    parser.add_argument('-n', dest='n', help='Modulos (n = p * q)', type=autoInt)
     parser.add_argument('-c', dest='c', help='Cipher text', type=autoInt)
     parser.add_argument('-f', dest='f', help='A factor used in chosen cipher text', type=autoInt)
     parser.add_argument('-plain', dest='plain', help='The plain text decrypted from the chosen cipher', type=autoInt)
@@ -63,6 +75,11 @@ if __name__ == '__main__':
         with open(args.raw) as f:
             args.c = f.read()
 
+    if args.p and args.q:
+        args.n = args.p * args.q
+
+    print(args)
+
 
     '''*************************************************************************
         Crack
@@ -75,18 +92,33 @@ if __name__ == '__main__':
         print ('%x' % pow(args.c, args.d, args.n)).decode('hex')
 
     elif not args.technique:
-        attack = Wiener(args.n, args.e)
+        print('[+] Trying Multiplicative Inverse attack')
+        attack = Inverse(args.p, args.q, args.e)
         if attack.crack():
             cracked = True
-        else:
-            attack = Fermat(args.n, args.e)
+        else:        
+            print('[+] Trying Weiner attack')
+            attack = Wiener(args.n, args.e)
             if attack.crack():
                 cracked = True
             else:
-                attack = Factorization(args.n, args.e)
+                print('[+] Trying Fermat attack')
+                attack = Fermat(args.n, args.e)
                 if attack.crack():
                     cracked = True
+                else:
+                    print('[+] Trying Factorization attack')
+                    attack = Factorization(args.n, args.e)
+                    if attack.crack():
+                        cracked = True
         if cracked:
+            decrypt(attack)
+
+    
+    elif args.technique == 'inverse':
+        attack = Inverse(args.p, args.q, args.e)
+        if attack.crack():
+            cracked = True
             decrypt(attack)
 
     elif args.technique == 'wiener':

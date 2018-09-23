@@ -1,0 +1,5 @@
+argparse
+gmpy
+gmpy2
+git+git://github.com/hellman/libnum@master
+CRT

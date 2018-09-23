@@ -1,2 +1,5 @@
+.vscode
+build
+dist
 *.pyc
 *.egg-info
