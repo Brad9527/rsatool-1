@@ -46,4 +46,5 @@ rsatool -t hastad -e 3 -n 770208589881542620069464504676753940863383387375206105
 
 # Credits
 
-Special thanks to [rk700](https://github.com/rk700/attackrsa) and [hellman](https://github.com/hellman/libnum)
+* [hellman](https://github.com/hellman/libnum)
+* [rk700](https://github.com/rk700/attackrsa)

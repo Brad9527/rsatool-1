@@ -1,5 +1,9 @@
 .vscode
 build
 dist
+__pycache__
 *.pyc
 *.egg-info
+.eggs
+.cache
+.pytest_cache

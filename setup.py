@@ -1,12 +1,11 @@
 from setuptools import *
 from os import system
 
+
 setup(
-    author = 'XRUST',
+    author = 'xrust',
     name = 'rsatool',
-    version = '0.2',
-    packages = ['rsatool'],
-    scripts = ['bin/rsatool']
+    version = '0.3',
+    scripts = ['bin/rsatool'],
+    packages = find_packages()
 )
-
-

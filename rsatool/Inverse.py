@@ -15,7 +15,7 @@ class Inverse():
 
     def crack(self):
         try:
-            self.d = gmpy2.invert(self.e, self.t)
+            self.d = int(gmpy2.invert(self.e, self.t))
             return True
         except:
             return False

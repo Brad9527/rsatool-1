@@ -18,9 +18,9 @@ def autoInt(n):
 
 def decrypt(attack):
     if args.c:
-        key = RSA.construct((args.n, long(args.e), attack.d, attack.p, attack.q))
-        if args.padding:
-            key = PKCS1_OAEP.new(key)
+        # key = RSA.construct((args.n, long(args.e), attack.d, attack.p, attack.q))
+        # if args.padding:
+        #     key = PKCS1_OAEP.new(key)
 
         m = pow(args.c, attack.d, args.n)
         print('p = {}'.format(attack.p))
@@ -62,6 +62,17 @@ if __name__ == '__main__':
     parser.add_argument('-raw', dest='raw', help='Read cipher.raw file')
     parser.add_argument('-padding', dest='padding', help='Use padding', action='store_true')
     args = parser.parse_args()
+    print('\n\n[ RSAtool ]      ...by xrust\n')
+
+
+    if args.e < 65537:
+        print('[!] Small exponent (Factorization attack)')
+    elif args.e == 65537:
+        print('[!] Standard Exponent (Multiplicative Inverse attack)')
+        print('[!] Standard Exponent (Fermat attack)')
+    else:
+        print('[!] Large Exponent (Weiner attack)')
+
 
     if args.pem:
         assert os.path.isfile(args.pem)
@@ -78,12 +89,11 @@ if __name__ == '__main__':
     if args.p and args.q:
         args.n = args.p * args.q
 
-    print(args)
-
 
     '''*************************************************************************
         Crack
     *************************************************************************'''
+    print('\n')
     cracked = False
 
 
