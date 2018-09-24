@@ -1,4 +1,7 @@
-import argparse, json, os
+import argparse
+import json
+import os
+import binascii
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from rsatool import *
@@ -88,7 +91,7 @@ if __name__ == '__main__':
     if args.raw:
         assert os.path.isfile(args.raw)
         with open(args.raw) as f:
-            args.c = f.read()
+            args.c = int(binascii.hexlify(f.read()), 16)
 
     if args.p and args.q:
         args.n = args.p * args.q
