@@ -11,6 +11,7 @@ class Inverse():
         self.n = p * q # Modulo
         self.t = (p - 1) * (q - 1) # Carmichael's totient function
         self.e = e
+        self.d = None
         
 
     def crack(self):

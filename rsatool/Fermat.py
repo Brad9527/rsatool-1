@@ -29,7 +29,3 @@ class Fermat():
                 return True
         else:
             return False
-
-
-
-

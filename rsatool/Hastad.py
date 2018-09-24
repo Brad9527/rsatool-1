@@ -12,7 +12,7 @@ class Hastad(object):
         cs: array of cipher text
         '''
         self.ns = ns
-        self.n = ''
+        self.n = None
         self.e = e
         self.d = None
         self.p = None

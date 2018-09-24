@@ -17,24 +17,24 @@ def autoInt(n):
 
 
 def decrypt(attack):
+    print('p = {}'.format(attack.p))
+    print('q = {}'.format(attack.q))
+    print('n = {}'.format(args.n))
+    print('d = {}'.format(attack.d))
+
     if args.c:
         # key = RSA.construct((args.n, long(args.e), attack.d, attack.p, attack.q))
         # if args.padding:
         #     key = PKCS1_OAEP.new(key)
-
+        #     m = key.decrypt(args.c)
+        # else:
         m = pow(args.c, attack.d, args.n)
-        print('p = {}'.format(attack.p))
-        print('q = {}'.format(attack.q))
-        print('d = {}'.format(attack.d))
+        
         print('m = {}'.format(m))
         try:
-            print(str(hex(int(m)))[2:].replace('L', '').decode('hex'))
+            print(repr(str(hex(int(m)))[2:].replace('L', '').decode('hex'))[1:-1])
         except:
             pass
-    else:
-        print('p = {}'.format(attack.p))
-        print('q = {}'.format(attack.q))
-        print('d = {}'.format(attack.d))
 
 
 if __name__ == '__main__':
@@ -51,7 +51,7 @@ if __name__ == '__main__':
         'chosen'
     ], help='Attack technique')
     parser.add_argument('-d', dest='d', help='Private exponent', type=autoInt)
-    parser.add_argument('-e', dest='e', default=3, help='Public exponent', type=autoInt)
+    parser.add_argument('-e', dest='e', default=65537, help='Public exponent', type=autoInt)
     parser.add_argument('-p', dest='p', help='Prime number p', type=autoInt)
     parser.add_argument('-q', dest='q', help='Prime number q', type=autoInt)
     parser.add_argument('-n', dest='n', help='Modulos (n = p * q)', type=autoInt)
@@ -61,9 +61,14 @@ if __name__ == '__main__':
     parser.add_argument('-pem', dest='pem', help='Read pubkey.pem file')
     parser.add_argument('-raw', dest='raw', help='Read cipher.raw file')
     parser.add_argument('-padding', dest='padding', help='Use padding', action='store_true')
+    parser.add_argument('-bits', dest='bits', help='Key length for generating a keypair', default=4096, choices=[
+        1024,
+        2048,
+        4096
+    ], type=autoInt)
+    parser.add_argument('plaintext', nargs='?', help='Plaintext to encrypt using given exponent')
     args = parser.parse_args()
     print('\n\n[ RSAtool ]      ...by xrust\n')
-
 
     if args.e < 65537:
         print('[!] Small exponent (Factorization attack)')
@@ -72,7 +77,6 @@ if __name__ == '__main__':
         print('[!] Standard Exponent (Fermat attack)')
     else:
         print('[!] Large Exponent (Weiner attack)')
-
 
     if args.pem:
         assert os.path.isfile(args.pem)
@@ -101,31 +105,36 @@ if __name__ == '__main__':
         cracked = True
         print ('%x' % pow(args.c, args.d, args.n)).decode('hex')
 
+    elif args.plaintext:
+        cracked = True
+        Encrypt(args.e, args.plaintext, args.bits)
+
     elif not args.technique:
-        print('[+] Trying Multiplicative Inverse attack')
-        attack = Inverse(args.p, args.q, args.e)
+        if args.p and args.q:
+            print('[+] Trying Multiplicative Inverse attack')
+            attack = Inverse(args.p, args.q, args.e)
+            if attack.crack():
+                cracked = True
+
+        print('[+] Trying Weiner attack')
+        attack = Wiener(args.n, args.e)
         if attack.crack():
             cracked = True
-        else:        
-            print('[+] Trying Weiner attack')
-            attack = Wiener(args.n, args.e)
+        else:
+            print('[+] Trying Fermat attack')
+            attack = Fermat(args.n, args.e)
             if attack.crack():
                 cracked = True
             else:
-                print('[+] Trying Fermat attack')
-                attack = Fermat(args.n, args.e)
+                print('[+] Trying Factorization attack')
+                attack = Factorization(args.n, args.e)
                 if attack.crack():
                     cracked = True
-                else:
-                    print('[+] Trying Factorization attack')
-                    attack = Factorization(args.n, args.e)
-                    if attack.crack():
-                        cracked = True
         if cracked:
             decrypt(attack)
 
     
-    elif args.technique == 'inverse':
+    elif args.technique == 'inverse' and args.p and args.q:
         attack = Inverse(args.p, args.q, args.e)
         if attack.crack():
             cracked = True
