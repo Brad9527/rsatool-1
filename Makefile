@@ -12,6 +12,7 @@ dev:
 
 install:
 	make clean
+	sudo pip install -r requirements.txt
 	sudo python setup.py install
 
 test:
