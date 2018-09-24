@@ -115,21 +115,22 @@ if __name__ == '__main__':
             attack = Inverse(args.p, args.q, args.e)
             if attack.crack():
                 cracked = True
-
-        print('[+] Trying Weiner attack')
-        attack = Wiener(args.n, args.e)
-        if attack.crack():
-            cracked = True
         else:
-            print('[+] Trying Fermat attack')
-            attack = Fermat(args.n, args.e)
+            print('[+] Trying Weiner attack')
+            attack = Wiener(args.n, args.e)
             if attack.crack():
                 cracked = True
             else:
-                print('[+] Trying Factorization attack')
-                attack = Factorization(args.n, args.e)
+                print('[+] Trying Fermat attack')
+                attack = Fermat(args.n, args.e)
                 if attack.crack():
                     cracked = True
+                else:
+                    print('[+] Trying Factorization attack')
+                    attack = Factorization(args.n, args.e)
+                    if attack.crack():
+                        cracked = True
+
         if cracked:
             decrypt(attack)
 
