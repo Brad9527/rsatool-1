@@ -14,9 +14,9 @@ from rsatool import *
 def autoInt(n):
     res = n.split(',')
     if len(res)==1:
-        return int(res[0], 0)
+        return long(res[0], 0)
     else:
-        return [int(x, 0) for x in res]
+        return [long(x, 0) for x in res]
 
 
 def decrypt(attack):
@@ -26,11 +26,6 @@ def decrypt(attack):
     print('d = {}'.format(attack.d))
 
     if args.c:
-        # key = RSA.construct((args.n, long(args.e), attack.d, attack.p, attack.q))
-        # if args.padding:
-        #     key = PKCS1_OAEP.new(key)
-        #     m = key.decrypt(args.c)
-        # else:
         m = pow(args.c, attack.d, args.n)
         
         print('m = {}'.format(m))
@@ -44,7 +39,9 @@ if __name__ == '__main__':
     '''*************************************************************************
         Arguments and settings
     *************************************************************************'''
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='RSATOOL by XRUST'
+    )
     parser.add_argument('-t', dest='technique', choices=[
         'inverse',
         'wiener',
@@ -71,7 +68,6 @@ if __name__ == '__main__':
     ], type=autoInt)
     parser.add_argument('plaintext', nargs='?', help='Plaintext to encrypt using given exponent')
     args = parser.parse_args()
-    print('\n\n[ RSAtool ]      ...by xrust')
 
     if args.pem:
         assert os.path.isfile(args.pem)
@@ -92,17 +88,19 @@ if __name__ == '__main__':
     '''*************************************************************************
         Crack
     *************************************************************************'''
-    print('\n')
     cracked = False
 
 
     if args.c and args.d and args.n:
         cracked = True
-        print ('%x' % pow(args.c, args.d, args.n)).decode('hex')
+        plain = '%x' % pow(args.c, args.d, args.n)
+        if len(plain) % 2 == 1:
+            plain = '0' + plain
+        print(plain.decode('hex'))
 
     elif args.plaintext:
         cracked = True
-        Encrypt(args.e, args.plaintext, args.bits)
+        Encrypt(args.n, args.e, args.plaintext)
 
     elif not args.technique:
         if args.p and args.q:
